@@ -31,64 +31,65 @@ class _DiscoverPageState extends ConsumerState<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    final config = CollectionConfig.of(widget.type);
     final catalog = ref.watch(catalogProvider(widget.type));
     final isLive = ref.watch(catalogRepositoryProvider).isLive(widget.type);
 
-    return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 8, 4),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Discover',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(width: 8),
-                          _SourceBadge(isLive: isLive),
-                        ],
-                      ),
-                      Text(
-                        config.tagline,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: _refresh,
-                  icon: const Icon(Icons.refresh),
-                  tooltip: 'Reload deck',
-                ),
-              ],
+    return Stack(
+      children: [
+        // Full-screen deck fills everything behind the floating controls.
+        Positioned.fill(
+          child: catalog.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => _ErrorView(onRetry: _refresh, message: '$e'),
+            data: (items) => DiscoverDeck(
+              key: ValueKey('${widget.type.name}-$_nonce'),
+              type: widget.type,
+              items: items,
             ),
           ),
-          CollectionSelector(
-            selected: widget.type,
-            onSelected: widget.onTypeChanged,
-          ),
-          const SizedBox(height: 4),
-          Expanded(
-            child: catalog.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => _ErrorView(onRetry: _refresh, message: '$e'),
-              data: (items) => DiscoverDeck(
-                key: ValueKey('${widget.type.name}-$_nonce'),
-                type: widget.type,
-                items: items,
+        ),
+        // Floating top bar: collection selector + source badge + reload.
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CollectionSelector(
+                      selected: widget.type,
+                      onSelected: widget.onTypeChanged,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: _refresh,
+                    icon: const Icon(Icons.refresh),
+                    color: Colors.white,
+                    tooltip: 'Reload deck',
+                  ),
+                  const SizedBox(width: 4),
+                ],
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        // Source badge tucked just under the selector, clear of the chips.
+        Positioned(
+          top: 0,
+          right: 12,
+          child: SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 56),
+              child: _SourceBadge(isLive: isLive),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

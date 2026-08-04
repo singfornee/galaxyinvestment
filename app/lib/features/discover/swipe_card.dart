@@ -4,21 +4,20 @@ import '../../core/collections.dart';
 import '../../data/models/collection_item.dart';
 import '../../widgets/item_image.dart';
 
-/// A single full-bleed card in the Discover deck: poster with a gradient scrim
-/// and the title/subtitle/description overlaid at the bottom.
+/// A full-bleed card in the Discover deck: the image fills the whole screen
+/// with a top and bottom scrim so the overlaid controls and text stay legible.
+/// Tapping anywhere opens the details sheet.
 class SwipeCard extends StatelessWidget {
-  const SwipeCard({super.key, required this.item, this.onInfo});
+  const SwipeCard({super.key, required this.item, this.onTap});
 
   final CollectionItem item;
-  final VoidCallback? onInfo;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final config = CollectionConfig.of(item.type);
-    return Card(
-      elevation: 4,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    return GestureDetector(
+      onTap: onTap,
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -27,66 +26,100 @@ class SwipeCard extends StatelessWidget {
             title: item.title,
             imageUrl: item.imageUrl,
           ),
-          // Bottom scrim for legible text over any image.
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.center,
-                end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black87],
+          // Top scrim keeps the floating selector/badge readable.
+          const Align(
+            alignment: Alignment.topCenter,
+            child: FractionallySizedBox(
+              heightFactor: 0.22,
+              widthFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.black54, Colors.transparent],
+                  ),
+                ),
               ),
             ),
           ),
+          // Bottom scrim behind the title/description and action buttons.
+          const Align(
+            alignment: Alignment.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: 0.55,
+              widthFactor: 1,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Colors.black87],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Title block — sits above the action bar (which the deck overlays).
           Positioned(
-            left: 20,
-            right: 20,
-            bottom: 24,
+            left: 24,
+            right: 24,
+            bottom: 150,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 _TypePill(config: config),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   item.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
-                    height: 1.1,
+                    height: 1.05,
                   ),
                 ),
                 if (item.subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
                     item.subtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 15),
+                    style: const TextStyle(color: Colors.white70, fontSize: 17),
                   ),
                 ],
                 if (item.description.isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   Text(
                     item.description,
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 15,
+                      height: 1.3,
+                    ),
                   ),
                 ],
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(Icons.touch_app_outlined,
+                        size: 15, color: Colors.white.withValues(alpha: 0.6)),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tap for details',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
-          if (onInfo != null)
-            Positioned(
-              top: 8,
-              right: 8,
-              child: IconButton.filledTonal(
-                onPressed: onInfo,
-                icon: const Icon(Icons.info_outline),
-                tooltip: 'Details',
-              ),
-            ),
         ],
       ),
     );
@@ -101,7 +134,7 @@ class _TypePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: config.color,
         borderRadius: BorderRadius.circular(999),
@@ -109,15 +142,15 @@ class _TypePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(config.icon, size: 14, color: Colors.white),
+          Icon(config.icon, size: 15, color: Colors.white),
           const SizedBox(width: 6),
           Text(
             config.label.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
-              letterSpacing: 0.5,
+              letterSpacing: 0.6,
             ),
           ),
         ],

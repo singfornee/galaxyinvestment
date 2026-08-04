@@ -82,17 +82,18 @@ class _DiscoverDeckState extends ConsumerState<DiscoverDeck> {
       return _CaughtUp(type: widget.type);
     }
 
-    final displayed = math.min(3, _cards.length);
-    return Column(
+    final displayed = math.min(2, _cards.length);
+    return Stack(
       children: [
-        Expanded(
+        Positioned.fill(
           child: CardSwiper(
             controller: _controller,
             cardsCount: _cards.length,
             numberOfCardsDisplayed: displayed,
             isLoop: false,
-            backCardOffset: const Offset(0, 32),
-            padding: const EdgeInsets.all(16),
+            scale: 1.0,
+            backCardOffset: Offset.zero,
+            padding: EdgeInsets.zero,
             allowedSwipeDirection: const AllowedSwipeDirection.only(
               left: true,
               right: true,
@@ -104,18 +105,27 @@ class _DiscoverDeckState extends ConsumerState<DiscoverDeck> {
               final item = _cards[index];
               return SwipeCard(
                 item: item,
-                onInfo: () => DetailSheet.show(context, item),
+                onTap: () => DetailSheet.show(context, item),
               );
             },
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
-          child: ActionBar(
-            type: widget.type,
-            onSkip: () => _controller.swipe(CardSwiperDirection.left),
-            onSave: () => _controller.swipe(CardSwiperDirection.right),
-            onDone: () => _controller.swipe(CardSwiperDirection.top),
+        // Action controls float over the bottom of the current card.
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 0,
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: ActionBar(
+                type: widget.type,
+                onSkip: () => _controller.swipe(CardSwiperDirection.left),
+                onSave: () => _controller.swipe(CardSwiperDirection.right),
+                onDone: () => _controller.swipe(CardSwiperDirection.top),
+              ),
+            ),
           ),
         ),
       ],
