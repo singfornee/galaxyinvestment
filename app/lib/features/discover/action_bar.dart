@@ -70,7 +70,7 @@ class _ActionButton extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Material(
-          color: color.withOpacity(0.12),
+          color: color.withValues(alpha: 0.12),
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
