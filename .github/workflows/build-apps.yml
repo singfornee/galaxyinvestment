@@ -1,0 +1,79 @@
+name: Build apps
+
+# Builds the Curio Flutter app for both platforms and uploads the binaries as
+# workflow artifacts. Android produces an installable APK; iOS produces an
+# unsigned .app bundle (installing on a real device additionally requires
+# signing with an Apple Developer account).
+on:
+  push:
+    branches:
+      - main
+      - claude/universal-collection-app-f4vegf
+    paths:
+      - "app/**"
+      - ".github/workflows/build-apps.yml"
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: app
+
+env:
+  FLUTTER_VERSION: "3.44.8"
+
+jobs:
+  android:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+      - run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: curio-android-apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+
+  ios:
+    name: iOS (unsigned)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build ios --release --no-codesign
+
+      - name: Package unsigned .app
+        run: |
+          cd build/ios/iphoneos
+          zip -r -q Runner.app.zip Runner.app
+
+      - name: Upload iOS app
+        uses: actions/upload-artifact@v4
+        with:
+          name: curio-ios-unsigned
+          path: app/build/ios/iphoneos/Runner.app.zip
+          if-no-files-found: error

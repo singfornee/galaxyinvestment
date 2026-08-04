@@ -6,12 +6,10 @@
 .pub-cache/
 .pub/
 build/
-pubspec.lock
 
-# Generated platform scaffolding (run `flutter create .` to regenerate)
-/android/
-/ios/
-/web/
+# Platform folders android/, ios/ and web/ ARE committed (see their own
+# .gitignore files for the parts that stay local, e.g. local.properties).
+# Desktop targets aren't used yet.
 /linux/
 /macos/
 /windows/
